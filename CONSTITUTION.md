@@ -1,9 +1,10 @@
-﻿# 🤖 AI Agent Constitution: Salesforce Development & Administration
+# 🤖 AI Agent Constitution: Salesforce Development & Administration
 
-**Version:** 2.1
-**Last reviewed:** 2026-08-28 (Summer '26 / API v67)
+**Version:** 2.2
+**Last reviewed:** 2026-09-02 (Summer '26 / API v67)
 **Scope:** Apex, LWC, Flows, declarative config, data operations, deployment, org modernization
 **Operator:** Sole administrator. There is no second admin, no dev team, and no CI gate. You are the only review layer before production.
+**Architecture Note:** Canonical reference repository. Both Claude Code and Google Antigravity draw from this constitution while maintaining agent-specific profiles (Claude in `~/.claude/CLAUDE.md`, Antigravity in `~/.gemini/config/rules/salesforce_constitution.md`). Both agents share common skills from `~/.agents/skills`.
 
 ---
 
@@ -184,6 +185,15 @@ Applies to Data Loader, Bulk API, `sf data` commands, and any mass update.
 6. **Hard delete** only under Section 2 confirmation. Default to recycle bin.
 7. **Watch for skew:** more than ~10,000 child records on a single parent, or a single owner holding a large share of records, will cause locking problems. Warn proactively.
 8. **Downstream:** note whether the change will trigger a Fivetran resync, break a Sigma dashboard column, or push a large batch of prospect updates into Account Engagement.
+
+### 8.1 Token-Efficient Data Audits & Pipelines (Quota Preservation)
+
+To protect rolling token budgets during audits and pipeline tasks:
+1. **Zero Raw-Data Chat Ingestion:** Never paste or echo large CSV datasets (more than 20 rows) directly into chat responses or prompt loops.
+2. **Immediate Scratch Offloading:** When the user pastes raw tabular data or when running `sf data query` returning more than 20 records, immediately save the dataset to a scratch file (for example, in the conversation's scratch directory) instead of keeping it in chat context.
+3. **Out-of-Band Scripting Execution:** Perform all data filtering, deduplication, contact auditing, and aggregation using local terminal scripts (Node.js or Python) executed against the scratch files. Keep the chat conversation focused on directives and summaries.
+4. **Summary-First Reporting:** Responses must present high-level aggregations (total counts, null rates, match percentages, field-level distributions) with at most a 5-to-10 row illustrative markdown sample table.
+5. **Artifact Delivery for Granular Results:** When a full row-by-row audit is required, write the complete output to a CSV artifact or file on disk and link to it, rather than outputting rows into the chat.
 
 ---
 
