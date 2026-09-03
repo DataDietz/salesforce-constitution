@@ -1,7 +1,7 @@
 # 🤖 AI Agent Constitution: Salesforce Development & Administration
 
-**Version:** 2.2
-**Last reviewed:** 2026-09-02 (Summer '26 / API v67)
+**Version:** 2.4
+**Last reviewed:** 2026-09-03 (Summer '26 / API v67)
 **Scope:** Apex, LWC, Flows, declarative config, data operations, deployment, org modernization
 **Operator:** Sole administrator. There is no second admin, no dev team, and no CI gate. You are the only review layer before production.
 **Architecture Note:** Canonical reference repository. Both Claude Code and Google Antigravity draw from this constitution while maintaining agent-specific profiles (Claude in `~/.claude/CLAUDE.md`, Antigravity in `~/.gemini/config/rules/salesforce_constitution.md`). Both agents share common skills from `~/.agents/skills`.
@@ -15,7 +15,9 @@ Read this before every task. If a value below is `TODO`, ask once and then recor
 - **Org:** Duolingo English Test (DET) production org. Single admin/developer.
 - **Adjacent systems in the data path:** Sigma Computing, Pardot / Account Engagement, BigQuery (via Fivetran sync), Google Sheets, Asana. Changes to Salesforce schema propagate downstream.
 - **Current API version:** read from `sfdx-project.json`. Never author below v62. Target v67 unless a specific class is pinned lower for a documented reason.
-- **Sandboxes:** `TODO` (list aliases and their refresh cadence)
+- **Salesforce CLI aliases:** sandbox and development org `duo-sandbox` (`nick.dietz@duolingo.com.dietzdev`), production org `duo-prod` (`nick.dietz@duolingo.com`). The retired aliases `DietzDev`, `duolingo-prod`, `pardotOrg`, `duo-salesforce`, and `duo` must not be used.
+- **Default target:** `duo-sandbox` is configured as the default `target-org`. Every `sf` command must still pass either `--target-org duo-sandbox` or `--target-org duo-prod` explicitly. Default all non-destructive development, inspection, validation, and testing to `duo-sandbox`. Use `duo-prod` only when production is expressly in scope and subject to Section 2.
+- **Sandbox refresh cadence:** `TODO`
 - **Managed packages installed:** `TODO`
 - **Trigger framework in use:** `TODO` (if none, say so explicitly and do not invent one)
 - **Existing bypass mechanism:** `TODO` (custom permission API name, if one exists)
@@ -57,23 +59,25 @@ When you hit a gate, say exactly which gate and what the command would do. Do no
 Use these instead of guessing. Prefer read-only commands liberally.
 
 ```bash
-# Confirm which org you are pointed at before anything else
-sf org list
-sf org display --target-org <alias>
+# Confirm the sandbox before normal development, inspection, validation, or testing
+sf org display --target-org duo-sandbox
+
+# Confirm production only when production is expressly in scope
+sf org display --target-org duo-prod
 
 # Schema truth
-sf sobject list --sobject all --target-org <alias>
-sf sobject describe --sobject <Object__c> --target-org <alias>
+sf sobject list --sobject all --target-org duo-sandbox
+sf sobject describe --sobject <Object__c> --target-org duo-sandbox
 
 # Data shape and volume before any mass change
-sf data query --query "SELECT COUNT(Id) FROM <Object__c> WHERE <criteria>" --target-org <alias>
+sf data query --query "SELECT COUNT(Id) FROM <Object__c> WHERE <criteria>" --target-org duo-sandbox
 
 # What automation already exists on this object
-sf data query --use-tooling-api --query "SELECT Id, MasterLabel, ProcessType, Status FROM Flow WHERE Status = 'Active'" --target-org <alias>
+sf data query --use-tooling-api --query "SELECT Id, MasterLabel, ProcessType, Status FROM Flow WHERE Status = 'Active'" --target-org duo-sandbox
 
 # Validate a deploy without committing it
-sf project deploy start --dry-run --target-org <alias>
-sf project deploy validate --target-org <alias>
+sf project deploy start --dry-run --target-org duo-sandbox
+sf project deploy validate --target-org duo-sandbox
 ```
 
 **Rule:** If a task involves an object you have not described in this session, describe it first. Every time.
@@ -201,10 +205,16 @@ To protect rolling token budgets during audits and pipeline tasks:
 
 - Sandbox deploy and test before production, always.
 - Production deploys go `validate` or `dry-run` first, then the real deploy, then a smoke check.
-- Run the specific relevant tests, not just `RunLocalTests`, when iterating: `sf apex run test --tests <Class.method> --result-format human --target-org <alias>`.
+- Run the specific relevant tests, not just `RunLocalTests`, when iterating: `sf apex run test --tests <Class.method> --result-format human --target-org duo-sandbox`.
 - **Flows deploy as new versions.** Note the currently active version number before deploying so rollback is "reactivate version N."
 - For metadata with no clean rollback (field deletion, picklist value removal), say so explicitly and require Section 2 confirmation.
 - Never deploy on a Friday afternoon without saying out loud that it is a Friday afternoon.
+
+### 9.1 Git & Working Tree Guardrails
+
+- **No Git Worktrees:** Do not create, switch into, or propose Git worktrees. Keep all operations strictly within the single primary repository directory.
+- **Pre-Flight Git Verification:** Before modifying any repository files or switching tasks, check `git status` and the active branch to establish the baseline state. Never assume the working tree is clean.
+- **Post-Change Scoping & Inspection:** Check `git diff` and `git status` immediately after editing files to confirm that changes are strictly scoped to the task and no unintended modifications were introduced.
 
 ---
 

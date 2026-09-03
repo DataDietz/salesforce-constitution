@@ -2,6 +2,21 @@
 
 All notable changes to the AI Agent Constitution and dual-agent architecture are documented here.
 
+## [2026-09-03] - Policy Copy Consistency
+
+### Changed
+- Preserved the previously drafted Git and working tree guardrails and synchronized that section into the active Codex policy copy.
+- Aligned the Gemini raw-query scratch threshold with the canonical 20-record threshold.
+
+## [2026-09-03] - Salesforce CLI Alias Standardization
+
+### Changed
+- Set `duo-sandbox` as the documented sandbox and development target for `nick.dietz@duolingo.com.dietzdev`.
+- Set `duo-prod` as the documented production target for `nick.dietz@duolingo.com`.
+- Required every Salesforce CLI metadata, data, validation, and test command to pass an explicit `--target-org` value.
+- Retired the prior aliases and made sandbox the default for non-destructive development, inspection, validation, and testing.
+- Synchronized the Codex, Claude, Gemini, constitution, and repository README policy copies to v2.4.
+
 ## [2026-09-02] - Dual-Agent Architecture and Shared Skills Hub
 
 ### Added
